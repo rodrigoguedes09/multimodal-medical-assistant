@@ -17,6 +17,10 @@ This application demonstrates a complete architecture for medical clinic managem
 
 The system was developed following software architecture best practices, with clear separation of concerns, robust data validation, and automated test coverage.
 
+https://github.com/user-attachments/assets/61039d75-ca10-41cb-83bc-0c6c1c5c931d
+
+
+
 ## System Demonstration
 
 ### Telegram Integration Workflow
