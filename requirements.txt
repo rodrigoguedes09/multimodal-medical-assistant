@@ -1,3 +1,7 @@
+# Development Dependencies
+# Install with: pip install -r requirements-dev.txt
+
+# Core dependencies (from requirements.txt)
 Flask==2.3.3
 Flask-CORS==4.0.0
 SQLAlchemy==2.0.23
@@ -5,3 +9,19 @@ python-dotenv==1.0.0
 requests==2.31.0
 redis==5.0.1
 python-dateutil==2.8.2
+
+# Testing dependencies
+pytest>=7.1.2
+pytest-cov>=4.0.0
+pytest-html>=3.2.0
+pytest-mock>=3.10.0
+
+# Code quality
+flake8>=6.0.0
+black>=23.0.0
+pylint>=2.17.0
+mypy>=1.0.0
+
+# Development tools
+ipython>=8.10.0
+ipdb>=0.13.11

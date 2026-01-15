@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """
 Script para executar testes da Medical Automation API
-Inclui verificação de ambiente e execução dos testes
+Inclui verificação de ambiente, instalação de dependências e execução dos testes
 """
 import os
 import sys

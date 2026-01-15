@@ -1,511 +1,312 @@
-# Automação de sistema médico
+# Medical Automation API
 
-[![Python](https://img.shields.io/badge/Python-3.11+-blue.svg)](https://www.python.org/downloads/)
-[![Flask](https://img.shields.io/badge/Flask-2.3.3-green.svg)](https://flask.palletsprojects.com/)
-[![Redis](https://img.shields.io/badge/Redis-Cache-red.svg)](https://redis.io/)
-[![Tests](https://img.shields.io/badge/Tests-45%20Passing-brightgreen.svg)](#testes)
-[![License](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
+Complete medical automation system developed in Python with Flask, providing a robust REST API for managing patients, doctors, appointments, and an intelligent virtual assistant. The application includes a Redis caching system for performance optimization and a complete suite of automated tests.
 
-Sistema de automação médica desenvolvido em Python com Flask, oferecendo uma API REST robusta para gerenciamento de pacientes, médicos, agendamentos e assistente virtual inteligente. A aplicação inclui sistema de cache Redis para otimização de performance e suíte completa de testes automatizados. Para deixar mais fácil a visualização e testes, integratei todo o sistema com o Telegram (via N8N), desta forma é fácil verificar e reconhecer as funcionalidades do projeto.
+## Overview
 
-Resumidamente, utilizei Flask para a base da API REST, ngrok para fazer o deploy dessa API (e poder vincular ao N8N para ter a simulação mais fiel de uma aplicação real), N8N com agentes (integrado com a API para obter dados) e SQLite para o banco de dados. Caso deseje fazer algum teste, o chat do Telegram vinculado á aplicação é https://t.me/EssentiaTest_bot. Em um cenário real, o ideal seria fazer o deploy com Heroku, Railway ou qualquer outra ferramenta do tipo, evitando ficar limitado ao localhost.
+This application demonstrates a complete architecture for medical clinic management, including:
 
-**Caso você tente testar pelo link acima e o agente não consiga obter os dados, será porque a API não está mais rodando em minha máquina. Porém, configurando o projeto em seu computador e alterando todos os paramêtros (APIS do ElevenLabs e Gemini do N8N principalmente) será possível ter o mesmo resultado.**
+* **REST API** built with Flask
+* **N8N Integration** for workflow automation
+* **Virtual Assistant** with natural language processing
+* **Redis Cache System** for high performance
+* **SQLite Database** for data persistence
+* **Telegram Integration** for conversational user interface
+* **Voice Command Support** via ElevenLabs TTS/STT
+* **Generative AI** using Google Gemini Flash 2.5
 
-## Demonstração do Sistema
+The system was developed following software architecture best practices, with clear separation of concerns, robust data validation, and automated test coverage.
 
-### Funcionalidades Principais
-No vídeo abaixo, mostro o fluxo principal com áudio, com o seguinte workflow:
-1. O usuário envia uma mensagem - Trigger do Telegram é ativado, em seguida um bloco IF verifica se é uma mensagem de áudio ou texto.
-2. Caso for uma mensagem de áudio (como é o caso no vídeo), ocorre a transcrição para texto (com o intuito de passar mais facilmente os dados/contexto para o modelo).
-3. O contexto (prompt e dados) são passados para o Agente (conectado com o Gemini Flash 2.5). Nesse bloco há uma Tool que chama um sub-workflow capaz de fazer requisições para a API que criei.
-4. Após obter os dados corretamente (usando um endpoint específico que reconhece a intenção do usuário), o agente retorna uma mensagem para o usuário. Sempre respeitando o tipo de mensagem que o user mandou (áudio ou texto).
+## System Demonstration
 
-https://github.com/user-attachments/assets/61039d75-ca10-41cb-83bc-0c6c1c5c931d
+### Telegram Integration Workflow
 
-**Gerenciamento de Pacientes:**
-- Cadastro completo com validação de CPF, email e telefone
-- Consulta, atualização e remoção de registros
-- Armazenamento seguro de dados pessoais
+The system implements a complete automation flow with the following steps:
 
-**Sistema de Agendamentos:**
-- Consulta de horários disponíveis por médico e data
-- Agendamento automático de consultas
-- Cancelamento e reagendamento de appointments
-- Informações sobre valores e formas de pagamento
+1. **Message Reception**: Telegram trigger captures text or audio messages.
+2. **Audio Processing**: Automatic transcription using ElevenLabs for better context.
+3. **AI Processing**: Gemini Flash 2.5 agent processes user intent.
+4. **API Integration**: N8N sub-workflow executes REST API calls.
+5. **Contextual Response**: System returns a response in the same format (text or audio) as the original message.
 
-**Assistente Virtual Inteligente:**
-- Processamento de linguagem natural
-- Detecção automática de intenções do usuário
-- Agendamento via conversação
-- Respostas contextuais e personalizadas
+**Patient Management:**
 
-**Sistema de Cache Redis:**
-- Cache inteligente com TTL configurável
-- Invalidação automática em operações CRUD
-- Fallback graceful quando Redis não disponível
-- Monitoramento de performance em tempo real
+* Complete registration with validation for tax ID (CPF), email, and phone.
+* Query, update, and removal of records.
+* Secure storage of personal data.
 
-### Exemplo de Uso da API
+**Appointment System:**
+
+* Availability check by doctor and date.
+* Automatic appointment booking.
+* Cancellation and rescheduling of appointments.
+* Information on pricing and payment methods.
+
+**Intelligent Virtual Assistant:**
+
+* Natural language processing.
+* Automatic detection of user intent.
+* Booking via conversation.
+* Contextual and personalized responses.
+
+**Redis Cache System:**
+
+* Intelligent cache with configurable TTL.
+* Automatic invalidation on CRUD operations.
+* Graceful fallback when Redis is unavailable.
+* Real-time performance monitoring.
+
+### API Usage Example
 
 ```bash
-# Verificar saúde do sistema
+# Check system health
 curl http://localhost:5000/health
 
-# Consultar pacientes
+# List patients
 curl http://localhost:5000/patients
 
-# Verificar horários disponíveis
+# Check available schedules
 curl http://localhost:5000/available-schedules?date=2025-09-10
 
-# Interagir com assistente virtual
+# Interact with the virtual assistant
 curl -X POST http://localhost:5000/ai-agent \
   -H "Content-Type: application/json" \
-  -d '{"message": "Quais horários estão disponíveis?", "user_id": "user123"}'
-```
-
-### Casos de Uso Demonstrados
-
-1. **Fluxo de Agendamento Completo:** Desde a consulta de horários até confirmação
-2. **Integração com Cache:** Performance otimizada para consultas frequentes
-3. **Assistente Virtual:** Interação natural em português para agendamentos
-4. **Validação de Dados:** Verificação rigorosa de entrada em todos os endpoints
-5. **Tratamento de Erros:** Respostas adequadas para cenários de falha
-
-## Integração com N8N
-
-### Visão Geral
-
-O sistema foi desenvolvido com integração nativa para N8N (Node Automation), permitindo automação completa de workflows médicos através de interfaces visuais.
-
-### Características da Integração
-
-**Webhook Endpoints:** Todos os endpoints da API são compatíveis com webhooks do N8N, permitindo triggers automáticos baseados em eventos.
-
-**Integração com ElevenLabs:** Para fazer as transformações TTL e LTT, foi utilizado a API do ElevenLabs
-
-**Agente conectado com Gemini:** Na parte de integração com agente/IA, optei por utilizar um agente que usa o Gemini 2.5 Flash (ótimo por causa do custo de rápidez)
-
-**Confirmação por email:** Para acessar os dados e também para enviar o email de confirmação, utilizei um sub-workflow trigger, que é usado como Tool do Agente de IA.
-
-**Processamento de Dados:** Respostas estruturadas em JSON facilitam o processamento por nodes do N8N.
-
-**Assistente Virtual:** O endpoint `/ai-agent` oferece processamento de linguagem natural para automação de conversas.
-
-### Configuração N8N
-
-<img width="2108" height="1478" alt="image" src="https://github.com/user-attachments/assets/d1bd3f2b-3cae-4921-95c8-a7bf96779144" />
-
-
-## Início Rápido
-
-### Pré-requisitos
-
-- Python 3.11 ou superior
-- Redis Server (opcional - sistema funciona com fallback)
-- Git para controle de versão
-
-### Instalação e Execução
-
-1. **Clone o repositório:**
-   ```bash
-   git clone https://github.com/seu-usuario/medical-automation-api.git
-   cd medical-automation-api
-   ```
-
-2. **Crie um ambiente virtual:**
-   ```bash
-   # Windows
-   python -m venv venv
-   venv\Scripts\activate
-   
-   # Linux/Mac
-   python -m venv venv
-   source venv/bin/activate
-   ```
-
-3. **Instale as dependências:**
-   ```bash
-   pip install -r requirements.txt
-   ```
-
-4. **Configure as variáveis de ambiente (opcional):**
-   ```bash
-   copy .env.example .env
-   # Edite o arquivo .env conforme necessário
-   ```
-
-5. **Execute a aplicação:**
-   ```bash
-   cd src
-   python app.py
-   ```
-
-6. **Acesse a API:**
-   ```
-   http://localhost:5000
-   ```
-
-### Execução dos Testes
-
-```bash
-# Executar todos os testes
-python run_tests.py
-
-# Ou usar pytest diretamente
-pytest tests/ -v
-
-# Gerar relatório HTML
-pytest tests/ --html=test_report.html --self-contained-html
-```
-
-## Estrutura do Projeto
+  -d '{"message": "What times are available?", "user_id": "user123"}'
 
 ```
-medical-automation-api/
-├── README.md                       # Documentação principal
-├── requirements.txt                # Dependências Python
-├── pytest.ini                     # Configuração de testes
-├── run_tests.py                    # Script executor de testes
-├── .gitignore                      # Controle de versão
-├── config/                         # Configurações
-│   ├── __init__.py
-│   └── settings.py                 # Settings da aplicação
-├── src/                            # Código fonte principal
-│   ├── app.py                      # Aplicação Flask principal
-│   ├── database/                   # Camada de dados
-│   │   ├── connection.py           # Conexão SQLAlchemy
-│   │   ├── seed_data.py            # Dados iniciais
-│   │   └── seed_data_new.py        # Dados expandidos
-│   ├── models/                     # Modelos de dados
-│   │   ├── patient.py              # Modelo de Paciente
-│   │   └── appointment.py          # Modelos de Consulta/Médico
-│   ├── routes/                     # Rotas da API
-│   │   ├── patients.py             # Endpoints de pacientes
-│   │   └── appointments.py         # Endpoints de consultas
-│   ├── services/                   # Lógica de negócio
-│   │   ├── patient_service.py      # Serviços de paciente
-│   │   ├── appointment_service.py  # Serviços de consulta
-│   │   └── cache_service.py        # Sistema de cache Redis
-│   └── utils/                      # Utilitários
-│       └── validators.py           # Validadores de entrada
-├── tests/                          # Suíte de testes
-│   ├── test_unit_core.py           # 17 testes unitários
-│   ├── test_api_integration.py     # 28 testes de integração
-│   └── TEST_DOCUMENTATION.md      # Documentação dos testes
-└── docs/                           # Documentação adicional
-    ├── cache-documentation.md      # Documentação do cache
-    ├── advanced-features-guide.md  # Guia de recursos avançados
-    └── n8n-workflow-guide.md       # Integração com N8N
-```
-
-## Tecnologias Utilizadas
-
-### Framework Backend
-- **Flask 2.3.3** - Framework web minimalista e flexível para Python
-- **SQLAlchemy 2.0+** - ORM (Object-Relational Mapping) para Python
-- **SQLite** - Banco de dados embarcado para desenvolvimento e testes
-
-### Sistema de Cache
-- **Redis** - Sistema de cache em memória de alta performance
-- **Fallback Mode** - Sistema funciona normalmente sem Redis disponível
-- **TTL Configurável** - Cache com expiração automática configurável (padrão: 5 minutos)
-
-### Testes e Qualidade de Código
-- **pytest 7.1.2+** - Framework de testes moderno para Python
-- **pytest-html** - Geração de relatórios HTML detalhados
-- **pytest-cov** - Análise de cobertura de código
-- **45 Testes Automatizados** - Taxa de sucesso de 100%
-
-### Ferramentas de Desenvolvimento
-- **Requests** - Cliente HTTP para testes de integração
-- **Flask-Testing** - Utilitários específicos para testes Flask
-- **Type Hints** - Código com tipagem estática para melhor manutenibilidade
-
-## Arquitetura da Aplicação
-
-### Padrão de Design
-
-A aplicação segue uma arquitetura em camadas (Layered Architecture) com separação clara de responsabilidades:
-
-```
-┌─────────────────────────────────────┐
-│          API Routes Layer           │  ← Endpoints HTTP
-├─────────────────────────────────────┤
-│         Services Layer              │  ← Lógica de negócio
-├─────────────────────────────────────┤
-│          Cache Layer                │  ← Sistema de cache Redis
-├─────────────────────────────────────┤
-│         Models Layer                │  ← Modelos de dados
-├─────────────────────────────────────┤
-│        Database Layer               │  ← Persistência SQLite
-└─────────────────────────────────────┘
-```
-
-### Sistema de Cache Redis
-
-**Características Principais:**
-- **Cache Inteligente:** TTL de 5 minutos para dados dinâmicos
-- **Invalidação Automática:** Cache automaticamente limpo em operações CRUD
-- **Fallback Graceful:** Sistema funciona normalmente sem Redis disponível
-- **Health Monitoring:** Monitoramento contínuo da saúde do cache
-- **Estatísticas de Performance:** Métricas de uso em tempo real
-
-**Implementação Técnica:**
-```python
-# Exemplo de uso do sistema de cache
-cache_service.set_available_schedules(data, ttl=300)
-cached_data = cache_service.get_available_schedules()
-cache_service.invalidate_schedule_cache()
-```
-
-### Assistente Virtual Integrado
-
-**Funcionalidades Principais:**
-- **Processamento de Linguagem Natural:** Detecção automática de intenções
-- **Agendamento Inteligente:** Marcação de consultas através de conversação
-- **Consulta de Informações:** Horários, valores e médicos disponíveis
-- **Validação Rigorosa:** Verificação de parâmetros obrigatórios
-- **Respostas Contextuais:** Interações naturais e intuitivas em português
-
-## Referência da API
-
-### Endpoints de Saúde e Cache
-
-```http
-GET /health
-# Verifica o status de saúde da aplicação
-
-GET /cache/stats  
-# Retorna estatísticas do sistema de cache
-
-GET /cache/health
-# Verifica o status de saúde do Redis
-```
-
-### Endpoints de Pacientes
-
-```http
-GET /patients
-# Lista todos os pacientes cadastrados
-# Resposta: Array de objetos Patient
-
-GET /patients/{id}
-# Busca paciente específico por ID
-# Resposta: Objeto Patient ou código 404
-
-POST /patients
-# Cria novo paciente
-# Body: { "name": "string", "cpf": "string", "email": "string", "phone": "string", "birth_date": "YYYY-MM-DD" }
-# Resposta: Patient criado com ID
-
-PUT /patients/{id}
-# Atualiza paciente existente
-# Body: Campos a serem atualizados
-# Resposta: Patient atualizado
-
-DELETE /patients/{id}
-# Remove paciente do sistema
-# Resposta: 204 No Content
-```
-
-### Endpoints de Médicos e Agendamentos
-
-```http
-GET /doctors
-# Lista todos os médicos cadastrados
-# Resposta: Array de objetos Doctor
-
-GET /available-schedules
-# Lista horários disponíveis para agendamento
-# Query params: ?date=YYYY-MM-DD&doctor_id=int
-# Resposta: Array de objetos Schedule disponíveis
-
-GET /available-schedules?date=2025-09-10
-# Filtra horários por data específica
-
-GET /available-schedules?doctor_id=1
-# Filtra horários por médico específico
-```
-
-### Endpoints de Consultas
-
-```http
-GET /appointments
-# Lista todas as consultas agendadas
-# Resposta: Array de objetos Appointment
-
-POST /appointments
-# Agenda nova consulta
-# Body: { "patient_id": int, "doctor_id": int, "date": "YYYY-MM-DD", "time": "HH:MM", "notes": "string" }
-# Resposta: Appointment criado
-
-DELETE /appointments/{id}
-# Cancela consulta agendada
-# Resposta: 204 No Content
-
-GET /payment-info
-# Informações sobre valores e formas de pagamento
-# Resposta: Objeto com valores e métodos de pagamento
-```
-
-### Endpoint do Assistente Virtual
-
-```http
-POST /ai-agent
-# Interage com o assistente virtual
-# Body: { "message": "string", "user_id": "string" }
-# Resposta: { "success": bool, "action_taken": "string", "message": "string", "data": object, "suggested_actions": array }
-
-# Exemplos de mensagens suportadas:
-# - "Olá" → Saudação e apresentação do menu de opções
-# - "Quais horários disponíveis?" → Lista de horários disponíveis
-# - "Qual o valor da consulta?" → Informações de pagamento
-# - "Quero agendar uma consulta" → Inicia processo de agendamento
-```
-
-### Exemplos de Respostas
-
-**Objeto Patient:**
-```json
-{
-  "id": 1,
-  "name": "João Silva",
-  "cpf": "12345678901",
-  "email": "joao@email.com",
-  "phone": "11999999999",
-  "birth_date": "1990-05-15",
-  "created_at": "2025-09-03T10:00:00"
-}
-```
-
-**Objeto Schedule:**
-```json
-{
-  "id": 1,
-  "doctor_id": 1,
-  "doctor_name": "Dr. Ana Silva",
-  "doctor_specialty": "Cardiologia",
-  "date": "2025-09-10",
-  "start_time": "09:00:00",
-  "end_time": "10:00:00",
-  "is_available": true
-}
-```
-
-**Resposta do AI Agent:**
-```json
-{
-  "success": true,
-  "action_taken": "schedules_retrieved",
-  "message": "Horários Disponíveis:\n\n1. 10/09/2025 às 09:00\n   Dr. Ana Silva - Cardiologia",
-  "data": [...],
-  "suggested_actions": ["book_appointment", "payment_info"]
-}
-```
-
-## Testes
-
-### Suíte de Testes Completa
-
-A aplicação possui 45 testes automatizados com 100% de taxa de sucesso, cobrindo:
-
-**Testes Unitários (17 testes)**
-- Validação de formatos (CPF, email, telefone, datas)
-- Lógica de negócio e regras de validação
-- Funções utilitárias e formatação
-- Gerenciamento de sessões
-- AI Agent e detecção de intenções
-- Estruturas de dados e modelos
-- Tratamento de erros e exceções
-
-**Testes de Integração (28 testes)**
-- Todos os endpoints da API
-- Sistema de cache Redis
-- Validação de parâmetros HTTP
-- Respostas de erro adequadas
-- Integração com banco de dados
-- AI Agent com casos de uso reais
-- Fallback do sistema de cache
-
-### Executando os Testes
-
-**Opção 1: Script Interativo (Recomendado)**
-```bash
-python run_tests.py
-```
-- Menu interativo com opções
-- Instalação automática de dependências
-- Verificação de servidor da API
-- Relatórios detalhados
-
-**Opção 2: Pytest Direto**
-```bash
-# Todos os testes
-pytest tests/ -v
-
-# Apenas testes unitários
-pytest tests/test_unit_core.py -v
-
-# Apenas testes de integração
-pytest tests/test_api_integration.py -v
-
-# Com cobertura de código
-pytest tests/ --cov=src --cov-report=html
-
-# Gerar relatório HTML
-pytest tests/ --html=test_report.html --self-contained-html
-```
-
-**Opção 3: Categorias Específicas**
-```bash
-# Testes de cache
-pytest tests/ -m cache -v
-
-# Testes da API
-pytest tests/ -m api -v
-
-# Testes unitários
-pytest tests/ -m unit -v
-```
-
-### Relatórios de Teste
-
-**Relatório HTML:** Gerado automaticamente em `test_report.html`
-- Resultados detalhados por teste
-- Tempo de execução de cada teste
-- Logs de falhas (se houver)
-- Estatísticas de performance
-
-**Cobertura de Código:** Análise completa do código testado
-- Percentual de cobertura por arquivo
-- Linhas não cobertas identificadas
-- Relatório visual em HTML
-
-### Exemplo de Saída dos Testes
-
-```
-====================================================================== test session starts ======================================================================
-platform win32 -- Python 3.11.9, pytest-7.1.2
-collected 45 items
-
-tests/test_unit_core.py::TestCoreBusinessLogic::test_date_format_validation PASSED                  [  2%]
-tests/test_unit_core.py::TestCoreBusinessLogic::test_time_format_validation PASSED                  [  4%]
-tests/test_unit_core.py::TestCoreBusinessLogic::test_cpf_format_validation PASSED                   [  6%]
-tests/test_unit_core.py::TestCoreBusinessLogic::test_email_basic_validation PASSED                  [  8%]
-tests/test_unit_core.py::TestCoreBusinessLogic::test_phone_basic_validation PASSED                  [ 11%]
-...
-tests/test_api_integration.py::TestAPIEndpoints::test_ai_agent_greeting PASSED                      [ 82%]
-tests/test_api_integration.py::TestAPIEndpoints::test_ai_agent_payment_info_request PASSED          [ 84%]
-tests/test_api_integration.py::TestCacheService::test_cache_fallback_behavior PASSED               [100%]
-
-====================================================================== 45 passed in 9.74s =======================================================================
-```
-
-## Licença
-
-Este projeto está licenciado sob a **MIT License** - veja o arquivo [LICENSE](LICENSE) para detalhes.
 
 ---
 
+## N8N Integration
 
+### Overview
+
+The system was developed with native integration for N8N (Node Automation), allowing for full automation of medical workflows through visual interfaces.
+
+### Integration Features
+
+* **Webhook Endpoints**: All API endpoints are compatible with N8N webhooks, allowing for event-based triggers.
+* **ElevenLabs Integration**: Text-to-Speech (TTS) and Speech-to-Text (STT) transformations using the ElevenLabs API for full voice command support.
+* **AI Agent with Gemini**: Utilizes Google's Gemini 2.5 Flash model, offering excellent performance and cost-benefit for natural language processing.
+* **Email Confirmation**: Automated confirmation system via N8N sub-workflow, integrated as a tool for the AI agent.
+* **Data Processing**: Structured JSON responses facilitate processing by N8N nodes.
+* **Virtual Assistant**: The `/ai-agent` endpoint provides natural language processing for conversation automation.
+
+---
+
+## Quick Start
+
+### Prerequisites
+
+* Python 3.11 or higher
+* Redis Server (Optional - system works with fallback)
+* Git for version control
+
+### Installation and Execution
+
+1. **Clone the repository:**
+```bash
+git clone https://github.com/yourusername/medical-automation-api.git
+cd medical-automation-api
+
+```
+
+
+2. **Create a virtual environment:**
+```bash
+# Windows
+python -m venv venv
+venv\Scripts\activate
+
+# Linux/Mac
+python -m venv venv
+source venv/bin/activate
+
+```
+
+
+3. **Install dependencies:**
+```bash
+pip install -r requirements.txt
+
+```
+
+
+4. **Configure environment variables (Optional):**
+```bash
+cp .env.example .env
+# Edit the .env file as needed
+
+```
+
+
+5. **Run the application:**
+```bash
+cd src
+python app.py
+
+```
+
+
+6. **Access the API:**
+`http://localhost:5000`
+
+### Running Tests
+
+```bash
+# Run all tests
+python run_tests.py
+
+# Or use pytest directly
+pytest tests/ -v
+
+# Generate HTML report
+pytest tests/ --html=test_report.html --self-contained-html
+
+```
+
+---
+
+## Project Structure
+
+```
+medical-automation-api/
+├── README.md                   # Main documentation
+├── requirements.txt            # Python dependencies
+├── pytest.ini                  # Test configuration
+├── run_tests.py                # Test runner script
+├── .gitignore                  # Version control ignore file
+├── config/                     # Configuration files
+│   ├── __init__.py
+│   └── settings.py             # Application settings
+├── src/                        # Main source code
+│   ├── app.py                  # Main Flask application
+│   ├── database/               # Data layer
+│   │   ├── connection.py       # SQLAlchemy connection
+│   │   ├── seed_data.py        # Initial data
+│   │   └── seed_data_new.py    # Expanded data
+│   ├── models/                 # Data models
+│   │   ├── patient.py          # Patient model
+│   │   └── appointment.py      # Appointment/Doctor models
+│   ├── routes/                 # API routes
+│   │   ├── patients.py         # Patient endpoints
+│   │   └── appointments.py     # Appointment endpoints
+│   ├── services/               # Business logic
+│   │   ├── patient_service.py  # Patient services
+│   │   ├── appointment_service.py # Appointment services
+│   │   └── cache_service.py    # Redis cache system
+│   └── utils/                  # Utilities
+│       └── validators.py       # Input validators
+├── tests/                      # Test suite
+│   ├── test_unit_core.py       # 17 unit tests
+│   ├── test_api_integration.py # 28 integration tests
+│   └── TEST_DOCUMENTATION.md   # Test documentation
+└── docs/                       # Additional documentation
+    ├── cache-documentation.md   # Cache documentation
+    ├── advanced-features-guide.md # Advanced features guide
+    └── n8n-workflow-guide.md    # N8N integration guide
+
+```
+
+---
+
+## Technologies Used
+
+### Backend Framework
+
+* **Flask 2.3.3**: Minimalist and flexible web framework for Python.
+* **SQLAlchemy 2.0+**: ORM (Object-Relational Mapping) for Python.
+* **SQLite**: Embedded database for development and testing.
+
+### Caching System
+
+* **Redis**: High-performance in-memory cache system.
+* **Fallback Mode**: System functions normally without Redis available.
+* **Configurable TTL**: Cache with automatic expiration (Default: 5 minutes).
+
+### Testing and Code Quality
+
+* **pytest 7.1.2+**: Modern testing framework for Python.
+* **pytest-html**: Detailed HTML report generation.
+* **pytest-cov**: Code coverage analysis.
+* **45 Automated Tests**: 100% success rate.
+
+---
+
+## Application Architecture
+
+### Design Pattern
+
+The application follows a Layered Architecture with clear separation of concerns:
+
+1. **API Routes Layer**: HTTP Endpoints.
+2. **Services Layer**: Business Logic.
+3. **Cache Layer**: Redis caching system.
+4. **Models Layer**: Data Models.
+5. **Database Layer**: SQLite Persistence.
+
+### Redis Cache System
+
+* **Intelligent Cache**: 5-minute TTL for dynamic data.
+* **Automatic Invalidation**: Cache cleared automatically during CRUD operations.
+* **Graceful Fallback**: Operates without Redis if the server is down.
+* **Health Monitoring**: Continuous monitoring of cache health.
+
+---
+
+## API Reference
+
+### Health and Cache Endpoints
+
+* `GET /health`: Check application health status.
+* `GET /cache/stats`: Returns cache system statistics.
+* `GET /cache/health`: Check Redis health status.
+
+### Patient Endpoints
+
+* `GET /patients`: List all registered patients.
+* `GET /patients/{id}`: Get a specific patient by ID.
+* `POST /patients`: Create a new patient.
+* `PUT /patients/{id}`: Update an existing patient.
+* `DELETE /patients/{id}`: Remove a patient from the system.
+
+### Doctor and Appointment Endpoints
+
+* `GET /doctors`: List all registered doctors.
+* `GET /available-schedules`: List available time slots.
+* Query params: `?date=YYYY-MM-DD&doctor_id=int`
+
+
+* `POST /appointments`: Book a new appointment.
+* `DELETE /appointments/{id}`: Cancel a scheduled appointment.
+* `GET /payment-info`: Information regarding prices and payment methods.
+
+### Virtual Assistant Endpoint
+
+* `POST /ai-agent`: Interact with the virtual assistant.
+* Body: `{"message": "string", "user_id": "string"}`
+
+
+
+---
+
+## Tests
+
+### Complete Test Suite
+
+The application features 45 automated tests with a 100% success rate:
+
+* **Unit Tests (17 tests)**: Format validation (Tax ID, email, phone, dates), business logic, utility functions, and intent detection.
+* **Integration Tests (28 tests)**: API endpoints, Redis cache integration, database persistence, and AI agent real-world use cases.
+
+### Running the Tests
+
+* **Interactive Script**: `python run_tests.py`
+* **Direct Pytest**: `pytest tests/ -v`
+* **Code Coverage**: `pytest tests/ --cov=src --cov-report=html`
+
+## License
+
+This project is licensed under the **MIT License** - see the [LICENSE](https://www.google.com/search?q=LICENSE) file for details.
+
+---

@@ -10,10 +10,12 @@ from config.settings import DATABASE_URL
 
 Base = declarative_base()
 
-engine = create_engine(DATABASE_URL, echo=True)
+# Disable echo in production for better performance
+engine = create_engine(DATABASE_URL, echo=False)
 SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
 
 def get_db():
+    """Get database session with proper cleanup"""
     db = SessionLocal()
     try:
         yield db
@@ -21,8 +23,9 @@ def get_db():
         db.close()
 
 def init_db():
+    """Initialize database and create all tables"""
     from src.models.patient import Patient
     from src.models.appointment import Doctor, Appointment, Schedule
     
     Base.metadata.create_all(bind=engine)
-    print("Database initialized successfully!")
+    print("✅ Database initialized successfully!")
